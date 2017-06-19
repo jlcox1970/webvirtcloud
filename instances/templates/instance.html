@@ -513,7 +513,7 @@
                                                     </a>
                                                 </li>
                                             {% endif %}
-                                            {% if request.user.is_superuser or request.user.userattributes.can_clone_instances %}
+                                            {% if request.user.is_superuser or request.user.is_staff %}
                                                 <li role="presentation">
                                                     <a href="#clone" aria-controls="clone" role="tab" data-toggle="tab">
                                                         {% trans "Clone" %}
@@ -715,13 +715,12 @@
                                                     <div class="clearfix"></div>
                                                 </div>
                                             {% endif %}
-                                            {% if request.user.is_superuser or request.user.userattributes.can_clone_instances %}
+                                            {% if request.user.is_superuser or request.user.is_staff %}
                                                 <div role="tabpanel" class="tab-pane tab-pane-bordered" id="clone">
                                                     <p style="font-weight:bold;">{% trans "Create a clone" %}</p>
                                                     <form class="form-horizontal" action="" method="post" role="form">{% csrf_token %}
                                                         <div class="form-group">
                                                             <label class="col-sm-3 control-label" style="font-weight:normal;">{% trans "Clone Name" %}</label>
-                                                            {% if request.user.is_superuser %}
                                                             <div class="col-sm-4">
                                                                 <input id="clone_name" type="text" class="form-control" name="name" value="{{ vname }}-clone"/>
                                                             </div>
@@ -729,15 +728,6 @@
                                                                 <button type="button" class="btn btn-sm btn-success pull-left" name="guess-clone-name"
                                                                         onclick="guess_clone_name()" style="margin-top: 2px;">{% trans "Guess" %}</button>
                                                             </div>
-                                                            {% else %}
-                                                            <div class="col-sm-4">
-                                                                <select id="select_clone_name" class="form-control" name="name" size="1"/>
-                                                                {% for name in clone_free_names %}
-                                                                    <option value="{{ name }}">{{ name }}</option>
-                                                                {% endfor %}
-                                                                </select>
-                                                            </div>
-                                                            {% endif %}
                                                         </div>
                                                         {% if request.user.is_superuser %}
                                                             <p style="font-weight:bold;">{% trans "Network devices" %}</p>
@@ -757,7 +747,10 @@
                                                             {% endfor %}
                                                         {% else %}
                                                             {% for network in networks %}
-                                                                <input type="hidden" class="form-control" name="clone-net-mac-{{ forloop.counter0 }}" value="{{ network.mac }}"/>
+	<script type="text/javascript">
+document.getElementByID("rand_mac".defaultValue = random_mac({{ forloop.counter0}})
+</script>
+                                                                <input type="text" class="form-control" name="clone-net-mac-{{ forloop.counter0 }}" id="rand_mac"/>
                                                             {% endfor %}
                                                         {% endif %}
                                                         {% if request.user.is_superuser %}
@@ -1349,3 +1342,5 @@
     }
 </script>
 {% endblock %}
+
+

@@ -45,6 +45,10 @@ def instances(request):
     error_messages = []
     all_host_vms = {}
     all_user_vms = {}
+    all_template_vms = {}
+    all_templates_vms = {}
+    jason_test = {}
+    templates = {}
     computes = Compute.objects.all()
 
     def get_userinstances_info(instance):
@@ -68,6 +72,18 @@ def instances(request):
                                       usr_inst.instance.compute.type)
                 all_user_vms[usr_inst] = conn.get_user_instances(usr_inst.instance.name)
                 all_user_vms[usr_inst].update({'compute_id': usr_inst.instance.compute.id})
+
+        templates = Instance.objects.filter(is_template = 1)
+        for temp_inst in templates:
+                conn = wvmHostDetails(temp_inst.compute,
+                                      temp_inst.compute.login,
+                                      temp_inst.compute.password,
+                                      temp_inst.compute.type)
+		temp = temp_inst.name
+                temp_name = Instance.objects.get(name=temp)
+                all_template_vms[temp_inst] = conn.get_user_instances(temp_inst.name)
+                all_template_vms[temp_inst].update({'compute_id': temp_inst.compute.id})
+
     else:
         for comp in computes:
             if connection_manager.host_is_up(comp.type, comp.hostname):
@@ -136,7 +152,7 @@ def instances(request):
                 response['Content-Disposition'] = 'attachment; filename="console.vv"'
                 return response
 
-            if request.user.is_superuser:
+            if request.user.is_superuser or reuest.user.is_staff :
 
                 if 'suspend' in request.POST:
                     msg = _("Suspend")
@@ -179,7 +195,7 @@ def instance(request, compute_id, vname):
     except UserInstance.DoesNotExist:
         userinstace = None
 
-    if not request.user.is_superuser:
+    if not request.user.is_superuser  and not request.user.is_staff :
         if not userinstace:
             return HttpResponseRedirect(reverse('index'))
 
@@ -516,7 +532,7 @@ def instance(request, compute_id, vname):
                         addlogmsg(request.user.username, instance.name, msg)
                         return HttpResponseRedirect(request.get_full_path() + '#xmledit')
 
-            if request.user.is_superuser or userinstace.is_vnc:
+            if request.user.is_superuser or request.user.is_staff :
                 if 'set_console_passwd' in request.POST:
                     if request.POST.get('auto_pass', ''):
                         passwd = randomPasswd()
@@ -609,7 +625,7 @@ def instance(request, compute_id, vname):
                     addlogmsg(request.user.username, instance.name, msg)
                     return HttpResponseRedirect(request.get_full_path() + '#options')
 
-            if request.user.is_superuser or request.user.userattributes.can_clone_instances:
+            if request.user.is_superuser or request.user.userattributes.can_clone_instances or request.user.is_staff :
                 if 'clone' in request.POST:
                     clone_data = {}
                     clone_data['name'] = request.POST.get('name', '')
